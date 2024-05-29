@@ -1,0 +1,416 @@
+{%extends 'base.html'%} {%block title%} ModifyBill {%endblock%} {%block
+content%}
+<link href="../static/assets/css/modifybill.css" rel="stylesheet" />
+<script>
+  $(document).ready(function () {
+    // Get the value of Acc Date input field from base.html
+    var accDate = $("#Acc_Date_Input").val();
+    // Set the value of the From Date input field to the Acc Date
+    $("#fromDate").val(accDate);
+
+    // Function to calculate and update amountCollectedPresent
+    function updateAmountCollectedPresent() {
+      var amountCollected = parseFloat($("#amountCollected").val());
+      var amountDue = parseFloat($("#amountDue").val());
+
+      if (!isNaN(amountCollected) && !isNaN(amountDue)) {
+        var amountCollectedPresent = amountCollected - amountDue;
+        $("#amountCollectedPresent").val(amountCollectedPresent.toFixed(2));
+      }
+    }
+
+    // Bind the update function to input events for amountCollected and amountDue
+    $("#amountCollected, #amountDue").on("input", updateAmountCollectedPresent);
+
+    $("#billNumber").on("blur", function () {
+      var billNumber = $(this).val(); // Get the flat number to extend
+      $.ajax({
+        url: "/modify_bill/" + billNumber, // Backend route to fetch extension details
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            console.log(response.result);
+            // Populate the form fields with the fetched data
+            $("#name").val(response.result.name);
+            $("#nationState").val(response.result.place_name);
+            $("#iF").val(response.result.I_F);
+            $("#gender").val(response.result.gender);
+            $("#gFS").val(response.result.G_F_S);
+            $("#dA").val(response.result.A_D);
+            $("#maleNumber").val(response.result.male_num);
+            $("#femaleNumber").val(response.result.female_num);
+            $("#childrenNumber").val(response.result.child_num);
+            $("#total").val(response.result.total);
+            $("#roomNumber").val(response.result.room_number);
+            $("#idCard").val(response.result.person_id);
+            $("#mobileNumber").val(response.result.mobile_num);
+            $("#billType").val(response.result.bill_type);
+            $("#amountDue").val(response.result.amt_due);
+            $("#fromDate").val(response.result.from_date);
+            $("#toDate").val(response.result.to_date);
+            $("#numberOfDays").val(response.result.no_of_days);
+            $("#roomTariff").val(response.result.tariff);
+            calculateAmountDue();
+            updateToDate();
+            updateAmountCollectedPresent(); // Call this function to update amountCollectedPresent
+          } else {
+            alert("Bill is closed so modification not allowed");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+          // Handle error if needed
+        },
+      });
+    });
+
+    $("#roomNumber").on("blur", function () {
+      var roomNumber = $("#roomNumber").val();
+      var dA = $("#dA").val() || "None"; // Assuming DA is already populated in the form
+      $.ajax({
+        url: "/extension_room_tariff/" + roomNumber + "/" + dA,
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            console.log(response);
+            $("#roomTariff").val(response.Tariff); // Populate roomTariff input field with tariff from response
+            updateToDate();
+          } else {
+            alert("Room is not occupied");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+          // Handle error if needed
+        },
+      });
+    });
+
+    $("#numberOfDays, #roomTariff").on("input", calculateAmountDue);
+
+    // Update "To Date" when "From Date" or number of days changes
+    $("#fromDate, #numberOfDays").on("input", updateToDate);
+
+    function calculateAmountDue() {
+      var numberOfDays = parseFloat($("#numberOfDays").val());
+      var tariff = parseFloat($("#roomTariff").val());
+
+      if (!isNaN(numberOfDays) && !isNaN(tariff)) {
+        var amountDue = numberOfDays * tariff;
+        $("#amountDue").val(amountDue.toFixed(2));
+        updateAmountCollectedPresent(); // Call this function to update amountCollectedPresent
+      }
+    }
+
+    function updateToDate() {
+      var fromDate = $("#fromDate").val();
+      var numberOfDays = parseInt($("#numberOfDays").val());
+
+      if (fromDate && !isNaN(numberOfDays)) {
+        var fromDateObj = new Date(fromDate);
+        var toDateObj = new Date(
+          fromDateObj.getTime() + numberOfDays * 24 * 60 * 60 * 1000
+        );
+
+        // Format the date as YYYY-MM-DD
+        var toDate =
+          toDateObj.getFullYear() +
+          "-" +
+          ("0" + (toDateObj.getMonth() + 1)).slice(-2) +
+          "-" +
+          ("0" + toDateObj.getDate()).slice(-2);
+
+        $("#toDate").val(toDate);
+      }
+    }
+    $(".form-control").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        var currentIndex = $(".form-control").index(this); // Get index of current input field
+        var nextIndex = currentIndex + 1; // Calculate index of next input field
+        $(".form-control").eq(nextIndex).focus(); // Focus on the next input field
+        return false; // Prevent form submission only when Enter key is pressed
+      }
+    });
+
+    // Event listener for the last input field to submit the form on Enter
+    $("#billType").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        $("#billForm").submit(); // Submit the form
+      }
+    });
+  });
+</script>
+
+<article>
+  <div class="grid">
+    {% for message in get_flashed_messages()%}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{message}}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+    <form
+      id="billForm"
+      action="{{url_for('modifybill')}}"
+      method="post"
+      class="grid-form"
+    >
+      <div class="form-group" style="grid-column: span 1">
+        <label for="billNumber">Bill Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="billNumber"
+          name="billNumber"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 2">
+        <label for="name">Name:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="nationState">Nation/State:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="nationState"
+          name="nationState"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="iF">I/F:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="iF"
+          name="iF"
+          oninput="this.value = this.value.toUpperCase()"
+          readonly
+        />
+      </div>
+      <div class="form-group">
+        <label for="gender">Gender:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="gender"
+          name="gender"
+          oninput="this.value = this.value.toUpperCase()"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="gFS">G/F/S:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="gFS"
+          name="gFS"
+          oninput="this.value = this.value.toUpperCase()"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="dA">D/A:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="dA"
+          name="dA"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="maleNumber">Male Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="maleNumber"
+          name="maleNumber"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="femaleNumber">Female Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="femaleNumber"
+          name="femaleNumber"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="childrenNumber">Children Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="childrenNumber"
+          name="childrenNumber"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="total">Total:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="total"
+          name="total"
+          readonly
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="roomNumber">Room Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomNumber"
+          name="roomNumber"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="roomTariff">Room Tariff:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomTariff"
+          name="roomTariff"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="fromDate">From Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="fromDate"
+          name="fromDate"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="numberOfDays">Number of Days:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="numberOfDays"
+          name="numberOfDays"
+          min="1"
+          value="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="toDate">To Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="toDate"
+          name="toDate"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amountDue">Amount Due:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="amountDue"
+          name="amountDue"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amountCollected">Amt Collected:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="amountCollected"
+          name="amountCollected"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="paymode">Paymode:</label>
+        <select
+          class="form-control"
+          id="paymode"
+          name="paymode"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        >
+          <option value="C">Cash</option>
+          <option value="S">Card</option>
+          <option value="Q">Cheque</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="remarks">Remarks:</label>
+        <textarea
+          class="form-control"
+          id="remarks"
+          name="remarks"
+          oninput="this.value = this.value.toUpperCase()"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="mobileNumber">Mobile Number:</label>
+        <input
+          type="tel"
+          class="form-control"
+          id="mobileNumber"
+          name="mobileNumber"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="idCard">ID Card:</label>
+        <input type="text" class="form-control" id="idCard" name="idCard" />
+      </div>
+
+      <div class="form-group">
+        <label for="billType">Bill Type:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="billType"
+          name="billType"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">ModifyBill</button>
+    </form>
+  </div>
+</article>
+
+{%endblock%}

@@ -1,0 +1,131 @@
+{%extends 'base.html'%} {%block title%} GuestDairy {%endblock%} {%block
+content%}
+<link href="../static/assets/css/guestdairy.css" rel="stylesheet" />
+<script>
+  $(document).ready(function () {
+    // Get the value of Acc Date input field from base.html
+    var accDate = $("#Acc_Date_Input").val();
+    // Set the value of the From Date input field to the Acc Date
+    $("#dateofissue").val(accDate);
+    dateofissue;
+    $("#roomNumber").on("blur", function () {
+      var roomNumber = $(this).val(); // Get the flat number to extend
+      $.ajax({
+        url: "/guest_diary/" + roomNumber, // Backend route to fetch extension details
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+          } else {
+            console.log(response.message);
+            alert("Room is occupied");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+    $(".form-control").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        var currentIndex = $(".form-control").index(this); // Get index of current input field
+        var nextIndex = currentIndex + 1; // Calculate index of next input field
+        $(".form-control").eq(nextIndex).focus(); // Focus on the next input field
+        return false; // Prevent form submission only when Enter key is pressed
+      }
+    });
+
+    // Event listener for the last input field to submit the form on Enter
+    $("#dateofissue").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        $("#billForm").submit(); // Submit the form
+      }
+    });
+  });
+</script>
+<article>
+  <div class="grid">
+    {% for message in get_flashed_messages()%}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{message}}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+    <form
+      id="billForm"
+      action="{{url_for('guestdiary')}}"
+      method="post"
+      class="grid-form"
+    >
+      <div class="form-group" style="grid-column: span 2">
+        <label for="leadName">Name:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="guestname"
+          name="guestname"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 2">
+        <label for="name_of_dept">Department:</label>
+        <select
+          class="form-control"
+          id="name_of_dept"
+          name="name_of_dept"
+          required
+        >
+          <option value="" disabled selected>Select Department</option>
+          <option value="sssihl">SSSIHL</option>
+          <option value="sssct">SSSSCT</option>
+          <option value="sssihms">SSSIHMS</option>
+          <option value="sssgh">SSSGH</option>
+          <option value="ssshss">SSSHSS</option>
+          <option value="sssbsd">SSSBSD</option>
+          <option value="others">OTHERS</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="onpayment">On Payment</label>
+        <select class="form-control" id="onpayment" name="onpayment" required>
+          <option value="" disabled selected>Select</option>
+          <option value="yes">YES</option>
+          <option value="no">NO</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="roomNumber">Room Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomNumber"
+          name="roomNumber"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="dateofissue">Date of Issue</label>
+        <input
+          type="date"
+          class="form-control"
+          id="dateofissue"
+          name="dateofissue"
+          required
+        />
+      </div>
+      <br />
+      <button type="submit" class="btn btn-primary">Issue Guest Room</button>
+    </form>
+  </div>
+</article>
+
+{%endblock%}

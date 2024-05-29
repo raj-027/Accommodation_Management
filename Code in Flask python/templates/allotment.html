@@ -1,0 +1,421 @@
+{%extends 'base.html'%} {%block title%} Allotment {%endblock%} {%block content%}
+<link href="../static/assets/css/allotment.css" rel="stylesheet" />
+<script src="../static/assets/js/allotment.js"></script>
+<script>
+  $(document).ready(function () {
+    var accDate = $("#Acc_Date_Input").val();
+    var parts = accDate.split("-");
+    var formattedDate = parts[2] + "-" + parts[1] + "-" + parts[0];
+    $("#fromDate").val(accDate);
+
+    $("#roomNumber").on("blur", function () {
+      var roomNumber = $(this).val();
+      var d_a = $("#d_a").val() || "None";
+      if (roomNumber.length > 1) {
+        $.ajax({
+          url: "/room_tariff/" + roomNumber + "/" + d_a,
+          method: "GET",
+          success: function (response) {
+            if (response.status) {
+              $("#roomTariff").val(response.Tariff);
+              updateToDate();
+            } else {
+              console.log(response.occupant_details);
+              alert(
+                "Room not Available it has been occupied by " +
+                  response.occupant_details["Name"] +
+                  " Till " +
+                  response.occupant_details["to_date"]
+              );
+            }
+          },
+          error: function (xhr, status, error) {
+            console.error(error);
+          },
+        });
+      }
+    });
+    $(".form-control").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        var currentIndex = $(".form-control").index(this); // Get index of current input field
+        var nextIndex = currentIndex + 1; // Calculate index of next input field
+        $(".form-control").eq(nextIndex).focus(); // Focus on the next input field
+        return false; // Prevent form submission only when Enter key is pressed
+      }
+    });
+
+    // Event listener for the last input field to submit the form on Enter
+    $("#billTypeInput").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        $("#billForm").submit(); // Submit the form
+      }
+    });
+    // Function to update total tariff based on number of days and room tariff
+    function updateToDate() {
+      var numberOfDays = $("#numberOfDays").val();
+      var roomTariff = $("#roomTariff").val();
+      if (numberOfDays && roomTariff) {
+        var amountDue = Number(roomTariff) * Number(numberOfDays);
+        $("#amountDue").val(amountDue);
+      }
+    }
+
+    // Event listener for changes in number of days input
+    $("#numberOfDays").on("input", function () {
+      updateToDate();
+    });
+
+    // Event listener for changes in to date input
+    $("#toDate").on("change", function () {
+      updateToDate();
+    });
+    // Function to fetch full form when nation code changes
+    $("#nation_code").on("blur", function () {
+      var nation_code = $(this).val(); // Corrected variable name
+      $.ajax({
+        url: "/nation_code/" + nation_code, // Corrected variable name
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            $("#nation_code").val(response.Place);
+            $("#i_f").val(response.Category);
+          } else {
+            console.log(response.Available_Codes);
+            var errorMessage =
+              "Invalid Nation Code\nThe available codes are:\n";
+            for (var i = 0; i < response.Available_Codes.length; i++) {
+              errorMessage +=
+                response.Available_Codes[i].code +
+                " - " +
+                response.Available_Codes[i].place_name +
+                "\n";
+            }
+            alert(errorMessage);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+    $("#idCard").on("blur", function () {
+      var idCard = $(this).val(); // Get the flat number to extend
+      $.ajax({
+        url: "/allotment_id/" + idCard, // Backend route to fetch extension details
+        method: "GET",
+        success: function (response) {
+          console.log(response);
+          // Populate the form fields with the fetched data
+          $("#leadName").val(response.name);
+          $("#mobileNumber").val(response.mobile_num);
+          $("#nation_code").val(response.place_name);
+          $("#gender").val(response.gender);
+          $("#i_f").val(response.I_F);
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+  });
+</script>
+<article>
+  <div class="grid">
+    {% for message in get_flashed_messages()%}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{message}}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    {% endfor %}
+
+    <form
+      id="billForm"
+      action="{{url_for('allotment')}}"
+      method="post"
+      class="grid-form"
+    >
+      <div class="form-group" style="grid-column: span 2">
+        <label for="leadName">Name:</label>
+        <input
+          type="ch"
+          class="form-control"
+          id="leadName"
+          name="leadName"
+          pattern="[A-Za-z\s]+"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="mobileNumber">Mobile No:</label>
+        <input
+          type="tel"
+          class="form-control"
+          id="mobileNumber"
+          name="mobileNumber"
+          pattern="[0-9]{10}"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="nation_code">Nation/Code:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="nation_code"
+          name="nation_code"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="i_f">I/F</label>
+        <input
+          type="text"
+          class="form-control"
+          id="i_f"
+          name="i_f"
+          oninput="this.value = this.value.toUpperCase()"
+          readonly
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="idCard">ID Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="idCard"
+          name="idCard"
+          value="{{id_card}}"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="gender">Gender:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="gender"
+          name="gender"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="g_f_s">G/F/S</label>
+        <input
+          type="text"
+          class="form-control"
+          id="g_f_s"
+          name="g_f_s"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="d_a">D/A</label>
+        <input
+          type="text"
+          class="form-control"
+          id="d_a"
+          name="d_a"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="maleno">Male No:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="maleno"
+          name="maleno"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="femaleno">Female No:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="femaleno"
+          name="femaleno"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="child">Child:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="child"
+          name="child"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="total">Total:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="total"
+          name="total"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="roomNumber">Room Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomNumber"
+          name="roomNumber"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="roomTariff">Room Tariff:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomTariff"
+          name="roomTariff"
+          readonly
+        />
+      </div>
+      <div class="form-group">
+        <label for="fromDate">From Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="fromDate"
+          name="fromDate"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="numberOfDays">Number of Days:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="numberOfDays"
+          name="numberOfDays"
+          value="1"
+          required
+          oninput="updateToDate()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="toDate">To Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="toDate"
+          name="toDate"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="amountDue">Amount Due:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="amountDue"
+          name="amountDue"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amountCollected">Amount Collected:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="amountCollected"
+          name="amountCollected"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="payMode">Paymode:</label>
+        <select class="form-control" id="payMode" name="payMode" required>
+          <option value="" disabled selected>Select Paymode</option>
+          <option value="Cash">CASH</option>
+          <option value="Card">CARD</option>
+          <option value="Cheque">CHEQUE</option>
+          <option value="UPI">UPI</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="remarks">Remarks:</label>
+        <textarea
+          class="form-control"
+          id="remarks"
+          name="remarks"
+          oninput="this.value = this.value.toUpperCase()"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="billType">Bill Type:</label>
+        <select
+          class="form-control"
+          id="billTypeInput"
+          name="billTypeInput"
+          required
+        >
+          <option value="" disabled selected>Select Bill Type</option>
+          <option value="Sevadal">SEVADAL</option>
+          <option value="Staff">STAFF</option>
+          <option value="Parthi Yatra">PARTHI YATRA</option>
+          <option value="Parents">PARENTS</option>
+          <option value="Devotees">DEVOTEES</option>
+        </select>
+      </div>
+
+      <br />
+
+      <!-- <div class="form-group" style="grid-column: span 1">
+        <label for="visaNumber">Visa Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="visaNumber"
+          name="visaNumber"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="visaExpiry">Visa Expiry:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="visaExpiry"
+          name="visaExpiry"
+          required
+        />
+      </div> -->
+
+      <button type="submit" class="btn btn-primary">Allot</button>
+      <a class="btn btn-primary" href="{{url_for('home')}}">Quit</a>
+    </form>
+  </div>
+</article>
+
+{%endblock%}

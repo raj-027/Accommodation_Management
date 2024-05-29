@@ -1,0 +1,31 @@
+{% extends 'lbase.html' %} {% block title %} Login {% endblock %} {% block
+content %}
+<body class="is-loading">
+
+  <div id="wrapper">
+
+    <section id="main">
+      <header>
+        <h1><strong>Accommodation</strong></h1>
+      </header>
+
+      <hr />
+      <h2><strong>Login</strong></h2>
+      <form action="{{ url_for('login') }}" method="post">
+        <div class="field">
+          <strong>{{msg}}</strong>
+          <input id="username" name="username" placeholder="Username" type="text" required/> <br>
+          <input  id="password" name="password" placeholder="Password" type="password" required/>
+        </div>
+        <input type="submit" class="btn" value="Sign In"></br>
+      </form>
+      <p class="bottom"><strong>Don't have an account?</strong>
+        <a class="bottom" href="{{ url_for('register') }}">Sign Up here</a>
+      </p>
+      
+      <hr />
+    </section>
+  </div>
+</body>
+
+{% endblock %}

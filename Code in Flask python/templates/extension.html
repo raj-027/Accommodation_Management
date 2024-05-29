@@ -1,0 +1,369 @@
+{%extends 'base.html'%} {%block title%} Extension {%endblock%} {%block content%}
+<link href="../static/assets/css/extension.css" rel="stylesheet" />
+<script src="../static/assets/js/extension.js"></script>
+<script>
+  $(document).ready(function () {
+    // Get the value of Acc Date input field from base.html
+    var accDate = $("#Acc_Date_Input").val();
+    // Set the value of the From Date input field to the Acc Date
+    $("#fromDate").val(accDate);
+
+    $("#flatNoToExtend").on("blur", function () {
+      var flatNoToExtend = $(this).val();
+      $.ajax({
+        url: "/extension_room/" + flatNoToExtend,
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            console.log(response.result);
+            $("#billNumber").val(response.result.bill_id);
+            $("#name").val(response.result.name);
+            $("#idCard").val(response.result.person_id);
+            $("#nationState").val(response.result.place_name);
+            $("#gender").val(response.result.gender);
+            $("#GFS").val(response.result.G_F_S);
+            $("#DA").val(response.result.A_D);
+            $("#maleNumber").val(response.result.male_num);
+            $("#femaleNumber").val(response.result.female_num);
+            $("#childrenNumber").val(response.result.child_num);
+            $("#total").val(response.result.total);
+            $("#IF").val(response.result.I_F);
+            $("#billTypeInput").val(response.result.bill_type);
+            updateToDate();
+          } else {
+            alert("Room is not occupied");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+    $("#DA").on("blur", function () {
+      var flatNoToExtend = $("#flatNoToExtend").val();
+      var DA = $("#DA").val() || "None"; // Assuming DA is already populated in the form
+      $.ajax({
+        url: "/extension_room_tariff/" + flatNoToExtend + "/" + DA,
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            console.log(response);
+            $("#roomTariff").val(response.Tariff); // Populate roomTariff input field with tariff from response
+            updateToDate();
+          } else {
+            alert("Room is not occupied");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+          // Handle error if needed
+        },
+      });
+    });
+
+    $("#billNumber").on("blur", function () {
+      var billNumber = $(this).val(); // Get the flat number to extend
+      var roomNumber = $("#flatNoToExtend").val();
+      $.ajax({
+        url: "/extension_bill/" + billNumber, // Backend route to fetch extension details
+        method: "GET",
+        data: { room_number: roomNumber },
+        success: function (response) {
+          if (response.status) {
+            console.log(response);
+            // Populate the form fields with the fetched data
+            $("#flatNoToExtend").val(response.result.room_number);
+            $("#name").val(response.result.name);
+            $("#idCard").val(response.result.person_id);
+            $("#nationState").val(response.result.place_name);
+            $("#gender").val(response.result.gender);
+            $("#GFS").val(response.result.G_F_S);
+            $("#DA").val(response.result.A_D);
+            $("#maleNumber").val(response.result.male_num);
+            $("#femaleNumber").val(response.result.female_num);
+            $("#childrenNumber").val(response.result.child_num);
+            // $("#roomTariff").val(response.tariff); // Assuming 'tariff' is the room tariff
+            $("#total").val(response.result.total);
+            $("#IF").val(response.result.I_F);
+            $("#billTypeInput").val(response.result.bill_type);
+            updateToDate();
+          } else {
+            alert("Bill is closed");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+          // Handle error if needed
+        },
+      });
+    });
+    function updateToDate() {
+      var numberOfDays = $("#numberOfDays").val();
+      var roomTariff = $("#roomTariff").val();
+      if (numberOfDays && roomTariff) {
+        var amountDue = Number(roomTariff) * Number(numberOfDays);
+        $("#amountDue").val(amountDue);
+      }
+    }
+    // Event listener for changes in number of days input
+    $("#numberOfDays").on("input", function () {
+      updateToDate();
+    });
+    $(".form-control").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        var currentIndex = $(".form-control").index(this); // Get index of current input field
+        var nextIndex = currentIndex + 1; // Calculate index of next input field
+        $(".form-control").eq(nextIndex).focus(); // Focus on the next input field
+        return false; // Prevent form submission only when Enter key is pressed
+      }
+    });
+
+    // Event listener for the last input field to submit the form on Enter
+    $("#billTypeInput").on("keydown", function (event) {
+      if (event.key === "Enter") {
+        $("#billForm").submit(); // Submit the form
+      }
+    });
+  });
+</script>
+<article>
+  <div class="grid">
+    {% for message in get_flashed_messages()%}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{message}}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    {% endfor %}
+    <form
+      id="billForm"
+      action="{{url_for('extension')}}"
+      method="post"
+      class="grid-form"
+    >
+      <div class="form-group" style="grid-column: span 1">
+        <label for="flatNoToExtend">Flat No to Extend:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="flatNoToExtend"
+          name="flatNoToExtend"
+          oninput="this.value = this.value.toUpperCase()"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="grid-column: span 1">
+        <label for="billNumber">Bill Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="billNumber"
+          name="billNumber"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 2">
+        <label for="name">Name:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="idCard">ID Number:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="idCard"
+          name="idCard"
+          required
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="nationState">Nation/State:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="nationState"
+          name="nationState"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="IF">I/F:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="IF"
+          name="IF"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="gender">Gender:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="gender"
+          name="gender"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="GFS">G/F/S:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="GFS"
+          name="GFS"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+      <div class="form-group" style="grid-column: span 1">
+        <label for="DA">D/A:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="DA"
+          name="DA"
+          oninput="this.value = this.value.toUpperCase()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="maleNumber">Male Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="maleNumber"
+          name="maleNumber"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="femaleNumber">Female Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="femaleNumber"
+          name="femaleNumber"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="childrenNumber">Children Number:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="childrenNumber"
+          name="childrenNumber"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="total">Total:</label>
+        <input type="text" class="form-control" id="total" name="total" />
+      </div>
+
+      <div class="form-group">
+        <label for="roomTariff">Room Tariff:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="roomTariff"
+          name="roomTariff"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="fromDate">From Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="fromDate"
+          name="fromDate"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="numberOfDays">Number of Days:</label>
+        <input
+          type="number"
+          class="form-control"
+          id="numberOfDays"
+          name="numberOfDays"
+          value="1"
+          required
+          oninput="updateToDate()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="toDate">To Date:</label>
+        <input
+          type="date"
+          class="form-control"
+          id="toDate"
+          name="toDate"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amountDue">Amount Due:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="amountDue"
+          name="amountDue"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amountCollected">Amount Collected:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="amountCollected"
+          name="amountCollected"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="payMode">Paymode:</label>
+        <select class="form-control" id="payMode" name="payMode" required>
+          <option value="" disabled selected>Select Paymode</option>
+          <option value="Cash">CASH</option>
+          <option value="Card">CARD</option>
+          <option value="Cheque">CHEQUE</option>
+          <option value="UPI">UPI</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="billType">Bill Type:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="billTypeInput"
+          name="billTypeInput"
+          required
+        />
+      </div>
+      <br />
+      <br />
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</article>
+
+{%endblock%}

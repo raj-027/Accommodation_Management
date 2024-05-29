@@ -1,0 +1,51 @@
+{% extends 'lbase.html'%} {%block title%} Register {%endblock%} {%block content%}
+<style>
+  body{
+    height: 100%;
+  background-color: #ffffff;
+  background-image: url("images/overlay.png"),
+    -moz-linear-gradient(60deg, rgba(255, 165, 150, 0.5) 5%, rgba(0, 228, 255, 0.35)),
+    url("../static/images/bg1.jpg");
+  background-image: url("images/overlay.png"),
+    -webkit-linear-gradient(60deg, rgba(255, 165, 150, 0.5) 5%, rgba(0, 228, 255, 0.35)),
+    url("../static/images/bg1.jpg");
+  background-image: url("images/overlay.png"),
+    -ms-linear-gradient(60deg, rgba(255, 165, 150, 0.5) 5%, rgba(0, 228, 255, 0.35)),
+    url("../static/images/bg1.jpg");
+  background-image: url("images/overlay.png"),
+    linear-gradient(60deg, rgba(255, 165, 150, 0.5) 5%, rgba(0, 228, 255, 0.35)),
+    url("../static/images/bg1.jpg");
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: 100px 100px, cover, cover;
+  background-position: top left, center center, bottom center;
+  background-attachment: fixed, fixed, fixed;
+  }
+  
+</style>  
+<body class="is-loading">
+
+    <div id="wrapper">
+
+      <section id="main">
+        <header>
+          <h1>Accommodation</h1>
+        </header>
+        <hr />
+        <h2>REGISTER</h2>
+        <form id="register" action="{{ url_for('register') }}" method="post">
+          <div class="field">
+            {{msg}}
+            <input id="username" name="username" type="text" placeholder="Username" class="textbox" required/> </br>
+            <input id="password" name="password" type="password" placeholder="Password" class="textbox" required/> </br>
+            <input id="password" name="cpassword" type="password" placeholder="Confirm Password" class="textbox" required/>
+          </div><input type="submit" class="btn" value="Sign Up"></br>
+        </form>
+        <p class="bottom">Already have an account? <a class="bottom" href="{{url_for('login')}}"> Sign In here</a></p>
+        <hr />
+      </section>
+    </div>
+
+  
+  </body>
+
+{%endblock%}

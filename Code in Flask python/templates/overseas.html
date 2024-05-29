@@ -1,0 +1,339 @@
+{% extends 'base.html'%} {% block title %} Overseas {% endblock %} {% block
+content %}
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    /* background-color: #08293f; */
+  }
+
+  article {
+    text-align: justify;
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    max-width: 100%; /* Adjust the max-width as needed */
+    margin: auto;
+    background-color: rgba(255, 255, 255, 0.493);
+  }
+
+  .container {
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.493);
+    max-width: 800px;
+    margin: 0 auto; /* Center the container horizontally */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  }
+
+  table {
+    width: 100%;
+    max-width: 100%; /* Adjust the max-width for smaller screens */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  table,
+  th,
+  td {
+    border: 1px solid #ddd;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  .btn-container {
+    text-align: right;
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background-color: #45a049;
+  }
+
+  .delete-btn {
+    background-color: #f85448;
+  }
+
+  .delete-btn:hover {
+    background-color: #ff0000;
+  }
+
+  @media screen and (max-width: 900px) {
+    .container {
+      max-width: 100%; /* Adjust the max-width for smaller screens */
+      padding: 10px;
+    }
+
+    .btn-container {
+      text-align: center;
+    }
+  }
+</style>
+<script>
+  $(document).ready(function () {
+    $("#nation_code_1").on("blur", function () {
+      var nation_code = $(this).val(); // Corrected variable name
+      $.ajax({
+        url: "/nation_code/" + nation_code, // Corrected variable name
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            $("#nation_code_1").val(response.Place);
+          } else {
+            console.log(response.Available_Codes);
+            var errorMessage =
+              "Invalid Nation Code\nThe available codes are:\n";
+            for (var i = 0; i < response.Available_Codes.length; i++) {
+              errorMessage +=
+                response.Available_Codes[i].code +
+                " - " +
+                response.Available_Codes[i].place_name +
+                "\n";
+            }
+            alert(errorMessage);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+    $("#nation_code_2").on("blur", function () {
+      var nation_code = $(this).val(); // Corrected variable name
+      $.ajax({
+        url: "/nation_code/" + nation_code, // Corrected variable name
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            $("#nation_code_2").val(response.Place);
+          } else {
+            console.log(response.Available_Codes);
+            var errorMessage =
+              "Invalid Nation Code\nThe available codes are:\n";
+            for (var i = 0; i < response.Available_Codes.length; i++) {
+              errorMessage +=
+                response.Available_Codes[i].code +
+                " - " +
+                response.Available_Codes[i].place_name +
+                "\n";
+            }
+            alert(errorMessage);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+    $("#nation_code_3").on("blur", function () {
+      var nation_code = $(this).val(); // Corrected variable name
+      $.ajax({
+        url: "/nation_code/" + nation_code, // Corrected variable name
+        method: "GET",
+        success: function (response) {
+          if (response.status) {
+            $("#nation_code_3").val(response.Place);
+          } else {
+            console.log(response.Available_Codes);
+            var errorMessage =
+              "Invalid Nation Code\nThe available codes are:\n";
+            for (var i = 0; i < response.Available_Codes.length; i++) {
+              errorMessage +=
+                response.Available_Codes[i].code +
+                " - " +
+                response.Available_Codes[i].place_name +
+                "\n";
+            }
+            alert(errorMessage);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        },
+      });
+    });
+  });
+</script>
+<article>
+  <div class="container">
+    <form action="{{ url_for('overseas') }}" id="billForm" method="post">
+      <table id="excel-table">
+        <thead>
+          <tr>
+            <th><label for="passport_no">Passport No</label></th>
+            <th><label for="name">Name</label></th>
+            <th><label for="nation_code">Nation code</label></th>
+            <th><label for="gender">Gender</label></th>
+            <th><label for="dob">Date of birth</label></th>
+            <th><label for="visa_number">Visa Number</label></th>
+            <th><label for="visa_expiry">Visa Expiry</label></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in range(1,4) %}
+          <tr>
+            <td>
+              <input
+                type="text"
+                id="passport_no"
+                name="passport_no[]"
+                required
+                pattern="[A-Za-z0-9]+"
+                maxlength="10"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="name"
+                name="name[]"
+                oninput="this.value = this.value.toUpperCase()"
+                required
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="nation_code_{{i}}"
+                name="nation_code[]"
+                oninput="this.value = this.value.toUpperCase()"
+                required
+              />
+            </td>
+            <td>
+              <select id="gender" name="gender[]" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+            </td>
+            <td>
+              <input type="date" id="dob" name="dob[]" required />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="visa_number"
+                name="visa_number[]"
+                required
+              />
+            </td>
+            <td>
+              <input
+                type="date"
+                id="visa_expiry"
+                name="visa_expiry[]"
+                required
+              />
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="btn-container">
+        <button type="submit" class="btn">Submit</button>
+      </div>
+    </form>
+  </div>
+</article>
+{%endblock%}
+
+<!-- <div class="btn-container">
+        <button onclick="addRow()" class="btn">Next Entry</button>
+        <button onclick="startNewEntry()" class="btn">New Entry</button>
+        <button type="submit" class="btn btn-primary">Allot</button>
+      </div> -->
+
+<script>
+  // function addRow() {
+  //   var table = document
+  //     .getElementById("excel-table")
+  //     .getElementsByTagName("tbody")[0];
+  //   var newRow = table.insertRow(table.rows.length);
+  //   var cols = 8; // Number of columns
+
+  //   for (var i = 0; i < cols - 1; i++) {
+  //     // Exclude action column
+  //     var cell = newRow.insertCell(i);
+  //     if (i === 3) {
+  //       // Check if it's the column for dropdown (Gender)
+  //       cell.innerHTML = `<select><option value="" disabled selected>Select Gender</option><option value="M">Male</option><option value="F">Female</option></select>`;
+  //     } else if (i === 4 || i === 6) {
+  //       // Check if it's the column for date (Date of birth or Visa Expiry)
+  //       cell.innerHTML = `<input type="date">`;
+  //     } else {
+  //       cell.innerHTML = `<input type="text">`;
+  //     }
+  //   }
+
+  //   var actionCell = newRow.insertCell(cols - 1);
+  //   actionCell.innerHTML =
+  //     '<button onclick="deleteRow(this)" class="btn delete-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/></svg></button>';
+  // }
+
+  // function deleteRow(btn) {
+  //   var row = btn.parentNode.parentNode;
+  //   row.parentNode.removeChild(row);
+  // }
+
+  // function submitForm() {
+  //   var table = document.getElementById("excel-table");
+  //   var formData = [];
+
+  //   for (var i = 1; i < table.rows.length; i++) {
+  //     // Start from index 1 to skip header row
+  //     var row = table.rows[i];
+  //     var rowData = [];
+
+  //     for (var j = 0; j < row.cells.length; j++) {
+  //       var cell = row.cells[j];
+  //       var input =
+  //         cell.querySelector("input") || cell.querySelector("select"); // Check if input or select element
+  //       rowData.push(input.value);
+  //     }
+
+  //     formData.push(rowData);
+  //   }
+
+  //   // Example: You can now send formData to your server or process it further
+  //   console.log(formData);
+  // }
+  // // Add delete button to the first row when the page loads
+  // window.onload = function () {
+  //   var firstRow = document.getElementById("excel-table").rows[1];
+  //   var actionCell = firstRow.insertCell(7); // Insert cell for the delete button
+  //   actionCell.innerHTML =
+  //     '<button onclick="deleteRow(this)" class="btn delete-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/></svg></button>';
+  // };
+
+  // function startNewEntry() {
+  //   var tableBody = document
+  //     .getElementById("excel-table")
+  //     .getElementsByTagName("tbody")[0];
+  //   tableBody.innerHTML = ""; // Clear existing rows
+  // }
+</script>

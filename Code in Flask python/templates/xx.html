@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel-like Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #08293f;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .btn-container {
+      text-align: right;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .delete-btn {
+      background-color: #f85448;
+    }
+
+    .delete-btn:hover {
+      background-color: #ff0000;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <table id="excel-table">
+    <thead>
+      <tr>
+        <th><label for="id">ID</label></th>
+        <th><label for="name">Name</label></th>
+        <th><label for="type">Type</label></th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added dynamically via JavaScript -->
+      td><input type="text" id="id" name="id"></td>
+        <td><input type="text" id="name" name="name"></td>
+        <td><input type="text" id="type" name="type"></td>
+        <td><button onclick="deleteRow(this)" class="btn delete-btn">Delete</button></td>
+    </tbody>
+  </table>
+
+  <div class="btn-container">
+    <button onclick="addRow()" class="btn">Add Row</button>
+    <button onclick="submitForm()" class="btn">Submit</button>
+    <button onclick="startNewEntry()" class="btn">Next Entry</button>
+  </div>
+</div>
+
+<script>
+  function addRow() {
+    var table = document.getElementById("excel-table").getElementsByTagName('tbody')[0];
+    var newRow = table.insertRow(table.rows.length);
+    var cols = 4; // Number of columns
+
+    for (var i = 0; i < cols - 1; i++) { // Exclude action column
+      var cell = newRow.insertCell(i);
+      cell.innerHTML = `<input type="text" id="${i}">`; // Added id attribute to input fields
+    }
+
+    var actionCell = newRow.insertCell(cols - 1);
+    actionCell.innerHTML = '<button onclick="deleteRow(this)" class="btn delete-btn">Delete</button>';
+  }
+
+  function deleteRow(btn) {
+    var row = btn.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+  }
+
+  function submitForm() {
+    var table = document.getElementById("excel-table");
+    var formData = [];
+
+    for (var i = 1; i < table.rows.length; i++) { // Start from index 1 to skip header row
+      var row = table.rows[i];
+      var rowData = [];
+
+      for (var j = 0; j < row.cells.length - 1; j++) { // Exclude action column
+        var cell = row.cells[j];
+        var input = cell.querySelector('input');
+        rowData.push(input.value);
+      }
+
+      formData.push(rowData);
+    }
+
+    // Example: You can now send formData to your server or process it further
+    console.log(formData);
+  }
+
+  function startNewEntry() {
+    var tableBody = document.getElementById("excel-table").getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = ''; // Clear existing rows
+  }
+</script>
+
+</body>
+</html>
+
+
+
+
+<!--<header>
+       <div class="container">
+        <div class="nav-scroller py-1 mb-3 border-bottom">
+          <header class="border-bottom lh-1 py-3">
+            <div
+              class="row flex-nowrap justify-content-between align-items-center"
+            >
+              <div class="col-4 pt-1">
+                <a href="{{ url_for('home') }}" class="btn"
+                  ><i class="fa fa-home"></i> Home</a
+                >
+              </div>
+              <div class="col-4 text-center">
+                <h1>{{ clicked_link_text }}</h1>
+              </div>
+              <div class="col-4 d-flex justify-content-end align-items-center">
+                <a
+                  class="btn btn-sm btn-outline-secondary"
+                  id="modifyDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  >{{session.username}}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="modifyDropdown">
+                  <a class="dropdown-item" href="{{url_for('logout')}}"
+                    >Logout</a
+                  >
+                </div>
+              </div>
+            </div>
+          </header>
+          <nav class="nav nav-underline justify-content-between">
+            <a
+              class="nav-item nav-link link-body-emphasis"
+              href="{{url_for('allotment')}}"
+              accesskey="F1"
+            >
+              Allotment
+            </a>
+
+            <a
+              class="nav-item nav-link link-body-emphasis"
+              href="{{url_for('extension')}}"
+              accesskey="F2"
+              >Extension</a
+            >
+            <div class="nav-item dropdown">
+              <a
+                class="nav-link link-body-emphasis dropdown-toggle"
+                href="#"
+                id="modifyDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Modify
+              </a>
+              <div class="dropdown-menu" aria-labelledby="modifyDropdown">
+                <a class="dropdown-item" href="{{url_for('modifybill')}}"
+                  >Modify Bill</a
+                >
+                <a class="dropdown-item" href="{{url_for('shift')}}"
+                  >Shifting</a
+                >
+                <a class="dropdown-item" href="#">Reallot</a>
+              </div>
+            </div>
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Enquiries</a
+            >
+            <a
+              class="nav-item nav-link link-body-emphasis"
+              href="{{url_for('vacation')}}"
+              >Vacation</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Cancellation</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#">Reports</a>
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Guest Diary</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Group Rooms</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Browse Bills</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Registration</a
+            >
+            <a class="nav-item nav-link link-body-emphasis" href="#"
+              >Misc Options</a
+            >
+          </nav>
+        </div>
+      </div>
+    </header> -->
